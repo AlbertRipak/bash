@@ -1,24 +1,40 @@
 #!/bin/bash
 
-# This sript use for install oracle 11gR2 on centos 8!
+echo "STEP 1: Update system!"
 yum -y update
 
-# Setting centos 8
+echo "STEP 2: Install mc package!"
 yum -y install mc 
 cp /usr/share/mc/syntax/sh.syntax /usr/share/mc/syntax/unknown.syntax
 
-sed -i.bak 's/=enforcing/=disabled/' /etc/sysconfig/selinux && \
-	setenforce 0 && \
-	systemctl stop firewalld && \
-	systemctl disable firewalld
+echo "STEP 3: Disable firewalld!"
+sed -i.bak 's/=enforcing/=disabled/' /etc/sysconfig/selinux 
+setenforce 0
+systemctl stop firewalld
+systemctl disable firewalld
 
-# iptables
+echo "STEP 4: Install iptables and packages need oracle database sowtfare!"
 yum -y install iptables
+yum -y install binutils java elfutils elfutils-libelf gcc gcc-c++ glibc glibc-common glibc-devel cpp make sysstat libaio libaio-devel unixODBC unixODBC-devel
+yum install -y xorg-x11-server-Xorg xorg-x11-xauth xorg-x11-apps
 
-systemctl start iptables
-systemctl enable iptables
+rpm -Uhv http://rpms.remirepo.net/enterprise/remi-release-7.rpm
+rpm -Uvh https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
+yum -y install chrony 
+yum -y install iftop htop atop lsof wget bzip2 traceroute gdisk unzip zip
 
-cat > /etc/iptables.sh <<EOF 
+# systemctl start iptables
+# systemctl enable iptables
+
+echo "STEP 4.1: Config date!"
+systemctl start chronyd
+systemctl enable chronyd
+date
+cal
+timedatectl set-timezone Europe/Kiev
+
+echo "STEP 5: Create and configure file iptables.sh!"
+echo '
 #!/bin/bash
 #
 # Объявление переменных
@@ -103,33 +119,22 @@ $IPT -A undef_fw -j DROP
 
 # Записываем правила
 /sbin/iptables-save  > /etc/sysconfig/iptables
-EOF
-
+' >> /etc/iptables.sh
 chmod 0740 /etc/iptables.sh
-. /etc/iptables.sh
 
-sed -i.bak 's/#Port 22/Port 55555' /etc/ssh/sshd_config
+echo "STEP 5: Substutute port for ssh on 55555!"
+sed -i.bak 's/#Port 22/Port 55555/' /etc/ssh/sshd_config
 
+echo "STEP 6: Install pakcages for system!"
 yum -y install net-tools bind-utils epel-release \
-	compat-libcap* \
-	iscsi-initiator-utils* \
-	elfutils-libelf-devel* \
-  network-scripts
+	iscsi-initiator-utils \
+	elfutils-libelf-devel \
+  network-scripts \
+  kmod-oracleasm \
+  compat-lib* \
+  ksh
 
- 
-
-yum -y localinstall * #в папку перекидуем скачаные пакеты и инсталим  oracleasm-support и oracleasmlib
-#yum -y install oracleasm-support.x86_64 
-#yum -y install oracleasmlib-2.0.12-1.el6.x86_64.rpm
-#wget https://download.oracle.com/otn_software/asmlib/oracleasmlib-2.0.12-1.el6.x86_64.rpm 
-#rm -f oracleasmlib-2.0.12-1.ecl6.x86_64.rpm
-
-# cat /etc/resolv.conf
-# search localdomain
-# nameserver 192.168.0.1
-# options timeout:1
-# options attempts:5
-
+echo "STEP 7: Create user and group (oracle and grid)!"
 groupadd -g 54321 oinstall
 groupadd -g 54322 dba
 groupadd -g 54323 oper
@@ -147,49 +152,33 @@ passwd oracle
 useradd -u 54331 -g oinstall -G oinstall,dba,asmdba,asmoper,asmadmin,racdba grid
 passwd grid
 
-# oracleasm configure -i
-# oracleasm init
-
-# oracleasm createdisk CRS1 /dev/sdb1
-# oracleasm createdisk DATA1 /dev/sdb2
-# oracleasm createdisk FRA1 /dev/sdb3
-
-# для проверки того, были ли созданы ети диски можно выполнить команды
-# /etc/init.d/oracleasm listdisks
-
-# нужно создать директорию для бд оракл
+echo "STEP 8: Create direcotry for oracle and oracle grid!"
 mkdir -p /u01/app/oracle
 mkdir -p /u01/app/oracle/product/11.2.0/dbhome_1
 chown -R oracle:oinstall /u01
 
-# нужно создать директорию для асм
 mkdir -p /u01/app/grid
 mkdir -p /u01/app/grid/11.2.0/grid_home
 chown -R grid:oinstall /u01/app/grid
 chmod -R 775 /u01
 
-# редактируем .bash_profile user grid
-# .bash_profile
-vi /home/oracle/.grid_profile
-
-TMP=/tmp; export TMP
+echo "STEP 9: Setting grid profile!"
+echo 'TMP=/tmp; export TMP
 TMPDIR=$TMP; export TMPDIR
 ORACLE_HOSTNAME=$HOSTNAME; export ORACLE_HOSTNAME
 ORACLE_BASE=/u01/app/grid; export ORACLE_BASE
-ORACLE_HOME=$ORACLE_BASE/product/11.2.0/dbhome_1; export ORACLE_HOME
+ORACLE_HOME=$ORACLE_BASE/product/11.2.0/grid_home; export ORACLE_HOME
 ORACLE_SID=+ASM; export ORACLE_SID
 ORACLE_TERM=xterm; export ORACLE_TERM
 BASE_PATH=/usr/sbin:$PATH; export BASE_PATH
 PATH=$ORACLE_HOME/bin:$GRID_HOME/bin:$BASE_PATH; export PATH
 LD_LIBRARY_PATH=$ORACLE_HOME/lib:/lib:/usr/lib; export LD_LIBRARY_PATH
 CLASSPATH=$ORACLE_HOME/JRE:$ORACLE_HOME/jlib:$ORACLE_HOME/rdbms/jlib; export CLASSPATH
+' >> /home/grid/.bash_profile
+chown -R grid:oinstall /home/grid/.bash_profile
 
-
-# изменение конфигураций ядра, Centos 8
-cat /etc/sysctl.conf
-
-vi /etc/sysctl.conf
-
+echo "STEP 10: Upgrade kernel parameters!"
+echo "
 fs.aio-max-nr = 1048576
 fs.file-max = 6815744
 kernel.shmall = 2097152
@@ -201,20 +190,12 @@ net.core.rmem_default = 262144
 net.core.rmem_max = 4194304
 net.core.wmem_default = 262144
 net.core.wmem_max = 1048576
-
-
-# для того что бы изменение вступили в силу 
+" >> /etc/sysctl.conf
 
 sysctl -p
-# или
-reboot
 
-# Oracle рекомендует ограничиsвать количество процессов и открытых файлов в linux
-# для повышения производительности сис. админ должен повысить определенные ограничения
-# оболочки для пользователя oracle
-
-vi /etc/security/limits.conf
-
+echo "STEP 11: Set parameters for user oracle and grid!"
+echo "
 oracle soft nproc 2047
 oracle hard nproc 16384
 oracle soft nofile 1024
@@ -224,20 +205,9 @@ grid soft nproc 2047
 grid hard nproc 16384
 grid soft nofile 1024
 grid hard nofile 65536
+" >> /etc/security/limits.conf
 
-# также нужно добавить следующую строку в 
-
-vi /etc/pam.d/login
-
-session required pam_limits.so
-
-# сис. админ должен также внести изменения в командные оболочки пользователя
-# загружаемые при входе в систему. Эти изменения зависят от используемой по умолчанию 
-# командной оболочки
-# для оболочки Bourne, BASH, Korn необходимо добавить следующие строки в файл
-
-vi /etc/profile
-
+echo '
 if [ $USER = "oracle" ];
 then 
 if [ $SHELL = "/bin/ksh" ]; then
@@ -257,11 +227,9 @@ else
 ulimit -u 16384 -n 65536
 fi 
 fi
+' >> /etc/profile
 
-# для оболочки С (csh, tcsh)
-
-vi /etc/csh.login
-
+echo '
 if ( $USER = "oracle" ) then 
 limit maxproc 16384
 limit descriptors 65536
@@ -271,14 +239,16 @@ if ( $USER = "grid" ) then
 limit maxproc 16384
 limit descriptors 65536
 endif
+' >> /etc/csh.login
 
-# создадим пременные окружени, для этого редактируем 
+echo "STEP 12: Add new session in /etc/pam.d/login"
+echo "session required pam_limits.so" >> /etc/pam.d/login
 
-vi /home/oracle/.bash_profile
 
-TMP=/tmp; export TMP
+echo "STEP 13: Settings bash_profile for user oracle!"
+echo 'TMP=/tmp; export TMP
 TMPDIR=$TMP; export TMPDIR
-ORACLE_HOSTNAME=oracleasm.localdomain; export ORACLE_HOSTNAME
+ORACLE_HOSTNAME=$HOSTNAME; export ORACLE_HOSTNAME
 ORACLE_BASE=/u01/app/oracle; export ORACLE_BASE
 ORACLE_HOME=$ORACLE_BASE/product/11.2.0/dbhome_1; export ORACLE_HOME
 ORACLE_SID=orcl; export ORACLE_SID
@@ -287,133 +257,22 @@ BASE_PATH=/usr/sbin:$PATH; export BASE_PATH
 PATH=$ORACLE_HOME/bin:$GRID_HOME/bin:$BASE_PATH; export PATH
 LD_LIBRARY_PATH=$ORACLE_HOME/lib:/lib:/usr/lib; export LD_LIBRARY_PATH
 CLASSPATH=$ORACLE_HOME/JRE:$ORACLE_HOME/jlib:$ORACLE_HOME/rdbms/jlib; export CLASSPATH
+' >> /home/oracle/.bash_profile
+chown -R oracle:oinstall /home/oracle/.bash_profile
 
-# чтобы внесенные изменения вступили в силу
-
-cd /home/oracle
+echo "STEP 14: Start .bash_profile from /home/grid!"
+cd /home/grid
 . ./.bash_profile
 
-# для успешной установки Oracle требуются дополнительные пакеты
-# чтобы проверить установлены ли пакеты 
+echo "STEP 14.1: Setting history comand!"
 
-yum -y install binutils* elfutils* elfutils-libelf* gcc* gcc-c++* glibc* glibc-common* glibc-devel* compat-libstdc++* cpp* make* compat-db* sysstat* libaio* libaio-devel* unixODBS* unixODBS-devel* 
-rpm -Uhv binutils elfutils elfutils-libelf gcc gcc-c++ glibc glibc-common glibc-devel compat-libstdc++ cpp make compat-db sysstat libaio libaio-devel unixODBS unixODBS-devel | sort
+echo "export HISTSIZE=10000
+export HISTTIMEFORMAT=\"%h %d %H:%M:%S \"
+PROMPT_COMMAND='history -a'
+export HISTIGNORE=\"ls:ll:history:w:\"" > /root/.bashrc
 
-# запускаем графическую оболочку под юзером root 
-
-xhost +
-
-# ЭТАП УСТАНОВКИ ORACLE
-
-# распаковуе дистрибутив
-
-unzip linux.x64_11gR2_database_1of2.zip
-unzip linux.x64_11gR2_database_1of2.zip
-
-# переходим в распакованый каталог
-
-cd ./database
-
-# запускаем 
-./runInstaller
-
-# после этого запустится графическая оболочка инсталлятора
-
-# ПОСТ ИНСТАЛЛЯЦИОННЫЙ ЭТАП
-
-# НЕ ФАКТ ЧТО НУЖНО ТАК ДЕЛАТЬ
-
-# для автоматического запуска и остановки СУБД Oracle и слушателя Listener
-# вместе со стартом и завершением ос нам нужно отредактирова файл
-
-vi /etc/oratab
-
-ORCL:/u01/app/oracle/product/11.2.0/dbhome_1:YourDB
-
-# вместо YourDB ваша БД
-
-# под пользователем root создадим новый файл автозапуска oracle
-# (сценарий инициализации для запуска и завершения работы бд)
-
-#!/bin/bash
-#
-# oracle Init file for starting and stopping
-# Oracle Database. Script is valid for 10g and 11g versions.
-#
-# chkconfig: 35 80 30
-# description: Oracle Database startup script
-
-# Source function library.
-
-. /etc/rc.d/init.d/functions
-
-ORACLE_OWNER=”oracle”
-ORACLE_HOME=”/u01/app/oracle/product/11.1.0/db_1″
-
-case “” in
-start)
-echo -n $ “Starting Oracle DB:”
-su – $ ORACLE_OWNER -c “$ ORACLE_HOME/bin/dbstart $ ORACLE_HOME”
-echo “OK”
-;;
-stop)
-echo -n $ “Stopping Oracle DB:”
-su – $ ORACLE_OWNER -c “$ ORACLE_HOME/bin/dbshut $ ORACLE_HOME”
-echo “OK”
-;;
-*)
-echo $ “Usage: {start|stop}”
-esac
-Execute (as root) following commands (First script change the permissions, second script is configuring execution for specific runlevels):
-chmod 750 /etc/init.d/oracle
-chkconfig –add oracle –level 0356
-Auto Startup and Shutdown of Enterprise Manager Database Control
-As root user create new file “oraemctl” (init script for startup and shutdown EM DB Console) in /etc/init.d/ directory with following content:
-#!/bin/bash
-#
-# oraemctl Starting and stopping Oracle Enterprise Manager Database Control.
-# Script is valid for 10g and 11g versions.
-#
-# chkconfig: 35 80 30
-# description: Enterprise Manager DB Control startup script
-
-# Source function library.
-
-. /etc/rc.d/init.d/functions
-
-ORACLE_OWNER=”oracle”
-ORACLE_HOME=”/u01/app/oracle/product/11.1.0″
-
-case “” in
-start)
-echo -n $ “Starting Oracle EM DB Console:”
-su – $ ORACLE_OWNER -c “$ ORACLE_HOME/bin/emctl start dbconsole”
-echo “OK”
-;;
-stop)
-echo -n $ “Stopping Oracle EM DB Console:”
-su – $ ORACLE_OWNER -c “$ ORACLE_HOME/bin/emctl stop dbconsole”
-echo “OK”
-;;
-*)
-echo $ “Usage: {start|stop}”
-esac
-
-# под root следующии команды 
-# (первый скрипт меняет разрешения, второй настраивает исполнения для 
-# определенных уровней выполнения)
-
-chmod 750 /etc/init.d/oraemctl
-chkconfig -add oraemctl -level 0356
-
-# можна использовать rlwrap для удобной работы с утилитой sqlplus и adrci
-# после того как скачаете RPM-пакет дистрибутив выполнить команду
-
-su -
-# rpm -ivh rlwrap-0.24-rh.i386.rpm
-# exit
-echo “alias sqlplus=’rlwrap sqlplus’” >> /home/oracle/.bash_profile
-echo “alias adrci=’rlwrap adrci’” >> /home/oracle/.bash_profile
-. /home/oracle/.bash_profile
+echo "STEP 15: You can install oracle of oracle grid infrastructure!"
+echo "You need install and configure oracleasm!"
+echo "This is ulr where you can download oracleasm pakcages ---> https://www.oracle.com/linux/downloads/linux-asmlib-rhel7-downloads.html"
 
 # THE END!
