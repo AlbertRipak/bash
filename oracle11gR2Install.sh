@@ -158,7 +158,7 @@ mkdir -p /u01/app/oracle/product/11.2.0/dbhome_1
 chown -R oracle:oinstall /u01
 
 mkdir -p /u01/app/grid
-mkdir -p /u01/app/grid/11.2.0/grid_home
+mkdir -p /u01/app/grid/product/11.2.0/grid_home
 chown -R grid:oinstall /u01/app/grid
 chmod -R 775 /u01
 
