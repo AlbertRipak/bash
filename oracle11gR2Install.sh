@@ -269,7 +269,7 @@ echo "STEP 14.1: Setting history comand!"
 echo "export HISTSIZE=10000
 export HISTTIMEFORMAT=\"%h %d %H:%M:%S \"
 PROMPT_COMMAND='history -a'
-export HISTIGNORE=\"ls:ll:history:w:\"" > /root/.bashrc
+export HISTIGNORE=\"ls:ll:history:w:\"" >> /root/.bashrc
 
 echo "STEP 15: You can install oracle of oracle grid infrastructure!"
 echo "You need install and configure oracleasm!"
