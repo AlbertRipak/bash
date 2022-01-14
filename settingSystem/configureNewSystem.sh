@@ -12,8 +12,8 @@
 
 sudo dnf update
 
-rpm -Uhv http://rpms.remirepo.net/enterprise/remi-release-8.rpm
-rpm -Uhv https://dl.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm
+sudo rpm -Uhv http://rpms.remirepo.net/enterprise/remi-release-8.rpm
+sudo rpm -Uhv https://dl.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm
 
 sudo dnf -y install vim mc tar binutils java elfutils elfutils-libelf 
 sudo dnf -y install gcc gcc-c++ glibc glibc-common glibc-devel cpp 
@@ -22,7 +22,7 @@ sudo dnf -y install net-tools bind-utils epel-release iscsi-initiator-utils
 sudo dnf -y install elfutils-libelf-devel network-scripts
 sudo dnf -y install compat-lib* ksh iftop htop atop lsof 
 sudo dnf -y install wget bzip2 traceroute gdisk unzip zip
-sudo dnf -y install yum install xorg-x11-utils*
+sudo dnf -y install xorg-x11-utils*
 sudo dnf -y install libnsl
 sudo dnf config-manager --set-enabled powertools
 sudo dnf -y xeyes
@@ -38,7 +38,7 @@ sudo sed 's/#StrictModes yes/StrictModes yes/' /etc/ssh/sshd_config
 ## Disable passowrd authentication
 ## Check connection with ssh-key
 sudo sed 's/PasswordAuthentication yes/PasswordAuthentication no/' /etc/ssh/sshd_config
-sudo firewall-cmd --permanent --service=ssh --add-port=2233/tcp
+sudo firewall-cmd --permanent --service=ssh --add-port=55555/tcp
 sudo systemctl restart firewalld
 sudo systemctl restart sshd
 
@@ -51,7 +51,7 @@ sudo groupadd -g 54325 dgdba
 sudo groupadd -g 54326 kmdba
 sudo groupadd -g 54330 racdba
 
-sudo useradd -u 54321 -g oinstall -G oinstall,dba,oper,backupdba,dgdba,kmdba,racdba,asmdba oracle
+sudo useradd -u 54320 -g oinstall -G oinstall,dba,oper,backupdba,dgdba,kmdba,racdba oracle
 sudo passwd oracle
 
 echo "STEP 8: Create direcotry for oracle and oracle grid!"
@@ -102,3 +102,5 @@ oracle soft stack  10240
 
 echo "session    required     pam_limits.so
 " >> /etc/pam.d/limits.so
+
+## xclock=your_ip_addres:0.0
