@@ -12,21 +12,24 @@
 
 sudo dnf update
 
-sudo rpm -Uhv http://rpms.remirepo.net/enterprise/remi-release-8.rpm
-sudo rpm -Uhv https://dl.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm
+#sudo rpm -Uhv http://rpms.remirepo.net/enterprise/remi-release-8.rpm
+#sudo rpm -Uhv https://dl.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm
+sudo rpm -Uhv http://rpms.remirepo.net/enterprise/remi-release-7.rpm
+rpm -Uhv https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
 
-sudo dnf -y install vim mc tar binutils java elfutils elfutils-libelf 
-sudo dnf -y install gcc gcc-c++ glibc glibc-common glibc-devel cpp 
-sudo dnf -y install make sysstat libaio libaio-devel unixODBC unixODBC-devel 
-sudo dnf -y install net-tools bind-utils epel-release iscsi-initiator-utils 
-sudo dnf -y install elfutils-libelf-devel network-scripts
-sudo dnf -y install compat-lib* ksh iftop htop atop lsof 
-sudo dnf -y install wget bzip2 traceroute gdisk unzip zip
-sudo dnf -y install xorg-x11-utils*
-sudo dnf -y install libnsl
-sudo dnf config-manager --set-enabled powertools
-sudo dnf -y xeyes
-sudo dnf -y install xorg-x11-server-Xorg xorg-x11-xauth xorg-x11-apps
+
+sudo yum -y install vim mc tar binutils java elfutils elfutils-libelf 
+sudo yum -y install gcc gcc-c++ glibc glibc-common glibc-devel cpp 
+sudo yum -y install make sysstat libaio libaio-devel unixODBC unixODBC-devel 
+sudo yum -y install net-tools bind-utils epel-release iscsi-initiator-utils 
+sudo yum -y install elfutils-libelf-devel network-scripts
+sudo yum -y install compat-lib* ksh iftop htop atop lsof 
+sudo yum -y install wget bzip2 traceroute gdisk unzip zip
+sudo yum -y install xorg-x11-utils*
+sudo yum -y install libnsl
+sudo yum config-manager --set-enabled powertools
+sudo yum -y xeyes
+sudo yum -y install xorg-x11-server-Xorg xorg-x11-xauth xorg-x11-apps
 
 # Configure sshd
 ## Change new port
@@ -76,10 +79,11 @@ sudo chown -R grid:oinstall /home/grid/.bash_profile
 
 echo "STEP 10: Upgrade kernel parameters!"
 sudo echo "
+fs.suid_dumpable = 1
 fs.aio-max-nr = 1048576
 fs.file-max = 6815744
 kernel.shmall = 2097152
-kernel.shmmax = 536870912
+kernel.shmmax = 1958721536
 kernel.shmmni = 4096
 kernel.sem = 250 32000 100 128
 net.ipv4.ip_local_port_range = 9000 65500
