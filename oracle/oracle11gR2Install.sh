@@ -253,7 +253,7 @@ ORACLE_HOME=$ORACLE_BASE/product/11.2.0/dbhome_1; export ORACLE_HOME
 ORACLE_SID=orcl; export ORACLE_SID
 ORACLE_TERM=xterm; export ORACLE_TERM
 BASE_PATH=/usr/sbin:$PATH; export BASE_PATH
-PATH=$ORACLE_HOME/bin:$GRID_HOME/bin:$BASE_PATH; export PATH
+PATH=$ORACLE_HOME/bin:/usr/bin:/usr/ccs/bin:/etc:/usr/binx11:/usr/loca/bin:$GRID_HOME/bin:$BASE_PATH; export PATH
 LD_LIBRARY_PATH=$ORACLE_HOME/lib:/lib:/usr/lib; export LD_LIBRARY_PATH
 CLASSPATH=$ORACLE_HOME/JRE:$ORACLE_HOME/jlib:$ORACLE_HOME/rdbms/jlib; export CLASSPATH
 ' >> /home/oracle/.bash_profile
@@ -275,3 +275,12 @@ echo "You need install and configure oracleasm!"
 echo "This is ulr where you can download oracleasm pakcages ---> https://www.oracle.com/linux/downloads/linux-asmlib-rhel7-downloads.html"
 
 # THE END!
+
+
+https://logic.edchen.org/how-to-resolve-error-in-invoking-target-agent_nmhs-of-makefile-ins_emagent-mk/
+# string 176
+vim /u01/app/oracle/product/11.2.0/dbhome_1/sysman/lib/ins_emagent.mk
+#   comment old string and add new
+    #$(MK_EMAGENT_NMECTL)
+    $(MK_EMAGENT_NMECTL) -lnnz11
+# push Retry
