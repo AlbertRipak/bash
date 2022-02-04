@@ -18,8 +18,8 @@ yum -y install iptables
 yum -y install binutils java elfutils elfutils-libelf gcc gcc-c++ glibc glibc-common glibc-devel cpp make sysstat libaio libaio-devel unixODBC unixODBC-devel
 yum install -y xorg-x11-server-Xorg xorg-x11-xauth xorg-x11*
 
-rpm -Uhv http://rpms.remirepo.net/enterprise/remi-release-8.rpm
-rpm -Uhv https://dl.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm
+rpm -Uhv http://rpms.remirepo.net/enterprise/remi-release-7.rpm
+rpm -Uhv https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
 yum -y install chrony 
 yum -y install iftop htop atop lsof wget bzip2 traceroute gdisk unzip zip
 
@@ -273,6 +273,13 @@ export HISTIGNORE=\"ls:ll:history:w:\"" >> /root/.bashrc
 echo "STEP 15: You can install oracle of oracle grid infrastructure!"
 echo "You need install and configure oracleasm!"
 echo "This is ulr where you can download oracleasm pakcages ---> https://www.oracle.com/linux/downloads/linux-asmlib-rhel7-downloads.html"
+
+# packages for grid 
+wget http://mirror.centos.org/centos/7/os/x86_64/Packages/compat-libstdc++-33-3.2.3-72.el7.x86_64.rpm
+yum install compat-libstdc++-33-3.2.3-72.el7.x86_64.rpm -y
+yum -y install elfutils-libelf-devel*
+yum -y install libcap.s*
+yum -y install libcap.so.1
 
 # THE END!
 
