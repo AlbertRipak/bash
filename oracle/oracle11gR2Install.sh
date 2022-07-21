@@ -280,6 +280,8 @@ yum install compat-libstdc++-33-3.2.3-72.el7.x86_64.rpm -y
 yum -y install elfutils-libelf-devel*
 yum -y install libcap.s*
 yum -y install libcap.so.1
+#yum install -y compat-libcap1.i686
+yum install compat-libcap1.x86_64 -y
 
 # THE END!
 
