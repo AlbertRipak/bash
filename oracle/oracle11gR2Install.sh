@@ -3,6 +3,8 @@
 echo '
 LD_LIBRARY_PATH=/usr/lib; export LD_LIBRARY_PATH
 ' >> /root/.bash_profile
+
+yum -y install compat-libcap1*
 ##############
 echo "STEP 1: Update system!"
 yum -y update
